@@ -6,6 +6,7 @@
 package battleship;
 
 import java.awt.Color;
+import java.util.Random;
 import javax.swing.JPanel;
 
 /**
@@ -42,6 +43,53 @@ public class GamePage extends javax.swing.JFrame
                 a[i][j].y = i;
             }
         }
+        EnemySpace[][] e = new EnemySpace[11][11];
+        for (int i = 0; i < 11; i++) {
+            for (int j = 0; j < 11; j++) {
+                e[i][j] = new EnemySpace();
+                e[i][j].setBackground(Color.GREEN);
+                jPanel2.add(e[i][j]);
+                e[i][j].addMouseListener(new java.awt.event.MouseAdapter()
+                {
+                    public void mouseClicked(java.awt.event.MouseEvent evt)
+                    {
+                        PlayerSpace space = (PlayerSpace) evt.getComponent();
+                        me.player1GameFieldClick(space.x, space.y);
+                    }
+                });
+                e[i][j].x = j;
+                e[i][j].y = i;
+            }
+        }
+        a[2][3].setBackground(Color.GRAY);
+        a[2][4].setBackground(Color.GRAY);
+        a[2][5].setBackground(Color.GRAY);
+        a[2][6].setBackground(Color.GRAY);
+        a[2][7].setBackground(Color.GRAY);
+        a[4][5].setBackground(Color.GRAY);
+        a[5][5].setBackground(Color.GRAY);
+        a[6][5].setBackground(Color.GRAY);
+        a[7][5].setBackground(Color.GRAY);
+        a[7][7].setBackground(Color.GRAY);
+        a[7][8].setBackground(Color.GRAY);
+        a[7][9].setBackground(Color.GRAY);
+        a[10][9].setBackground(Color.GRAY);
+        a[10][10].setBackground(Color.GRAY);
+        for (int i = 0; i < 10; i++) {
+            Random rand = new Random();
+            int x = rand.nextInt(10)+1;
+            int y = rand.nextInt(10)+1;
+            Color c = a[x][y].getBackground()==Color.GRAY?Color.RED:Color.WHITE;
+            a[x][y].setBackground(c);
+        }
+        for (int i = 0; i < 10; i++) {
+            Random rand = new Random();
+            int x = rand.nextInt(10)+1;
+            int y = rand.nextInt(10)+1;
+            boolean z = rand.nextBoolean();
+            Color c = z?Color.RED:Color.WHITE;
+            e[x][y].setBackground(c);
+        }
     }
 
     /**
@@ -77,17 +125,9 @@ public class GamePage extends javax.swing.JFrame
         jPanel1.setLayout(new java.awt.GridLayout(11, 11, 1, 1));
 
         jPanel2.setBackground(new java.awt.Color(204, 255, 204));
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 260, Short.MAX_VALUE)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
+        jPanel2.setPreferredSize(new java.awt.Dimension(230, 230));
+        jPanel2.setVerifyInputWhenFocusTarget(false);
+        jPanel2.setLayout(new java.awt.GridLayout(11, 11, 1, 1));
 
         jLabel1.setText("Player 1");
 
@@ -120,7 +160,7 @@ public class GamePage extends javax.swing.JFrame
                                 .addGap(86, 86, 86)
                                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(154, 154, 154)
+                        .addGap(127, 127, 127)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel2)
@@ -202,11 +242,21 @@ public class GamePage extends javax.swing.JFrame
         jTextArea1.append("" + x + y);
     }
 
-    private class PlayerSpace extends JPanel
+    private class GameSpace extends JPanel
     {
 
         public int x;
         public int y;
+    }
+    
+    private class PlayerSpace extends GameSpace
+    {
+        
+    }
+    
+    private class EnemySpace extends GameSpace
+    {
+        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
