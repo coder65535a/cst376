@@ -31,14 +31,17 @@ public class GamePage extends javax.swing.JFrame
                 a[i][j] = new PlayerSpace();
                 a[i][j].setBackground(new java.awt.Color(0, 204, 255));
                 jPanel1.add(a[i][j]);
+                if (i != 0 && j != 0)
+                {
                 a[i][j].addMouseListener(new java.awt.event.MouseAdapter()
                 {
                     public void mouseClicked(java.awt.event.MouseEvent evt)
                     {
-                        PlayerSpace space = (PlayerSpace) evt.getComponent();
+                        GameSpace space = (GameSpace) evt.getComponent();
                         me.player1GameFieldClick(space.x, space.y);
                     }
                 });
+                }
                 a[i][j].x = j;
                 a[i][j].y = i;
             }
@@ -49,14 +52,17 @@ public class GamePage extends javax.swing.JFrame
                 e[i][j] = new EnemySpace();
                 e[i][j].setBackground(Color.GREEN);
                 jPanel2.add(e[i][j]);
+                if (i != 0 && j != 0)
+                {
                 e[i][j].addMouseListener(new java.awt.event.MouseAdapter()
                 {
                     public void mouseClicked(java.awt.event.MouseEvent evt)
                     {
-                        PlayerSpace space = (PlayerSpace) evt.getComponent();
+                        GameSpace space = (GameSpace) evt.getComponent();
                         me.player1GameFieldClick(space.x, space.y);
                     }
                 });
+                }
                 e[i][j].x = j;
                 e[i][j].y = i;
             }
