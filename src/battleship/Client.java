@@ -9,7 +9,7 @@ package battleship;
  *
  * @author Avci
  */
-public class BattleShip {
+public class Client {
 
     /**
      * @param args the command line arguments
