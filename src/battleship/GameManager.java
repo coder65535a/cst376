@@ -5,10 +5,10 @@
  */
 package battleship;
 
+import battleship.Server.Player;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,17 +22,21 @@ public class GameManager extends Thread
 
     Socket p1;
     Socket p2;
+    Player pl1;
+    Player pl2;
     Scanner p1in;
     Scanner p2in;
     OutputStream p1out;
     OutputStream p2out;
     private int[] sunk;
 
-    GameManager(Socket p1, Socket p2) throws IOException
+    GameManager(Player pl1, Player pl2) throws IOException
     {
         sunk = new int[3];
-        this.p1 = p1;
-        this.p2 = p2;
+        this.pl1 = pl1;
+        p1 = pl1.client;
+        this.pl2 = pl2;
+        p2 = pl2.client;
         p1in = new Scanner(p1.getInputStream());
         p2in = new Scanner(p2.getInputStream());
         p1out = p1.getOutputStream();
@@ -45,10 +49,10 @@ public class GameManager extends Thread
     {
         try {
             p1out.write(("GAME START\r\n"
-                         + p2in.nextLine() + "\r\n"
+                         + pl2.name + "\r\n"
                          + "end\r\n").getBytes());
             p2out.write(("GAME START\r\n"
-                         + p1in.nextLine() + "\r\n"
+                         + pl2.name + "\r\n"
                          + "end\r\n").getBytes());
             int player = 1;
             while (playTurn(player)) {
@@ -82,18 +86,29 @@ public class GameManager extends Thread
             boolean cont = true;
             while (cont) {
                 while (!playerIn.hasNextLine()); //wait for input
-
+                System.out.println("input");
                 String in = playerIn.nextLine();
+                System.out.println(in);
                 if (!in.equals("SHOOT") && !in.equals("QUIT")) {
                     playerOut.write(("SYNC ERROR\r\n"
                                      + "end\r\n").getBytes());
+                }
+                if (in.equals("QUIT"))
+                {
+                    opponentOut.write(("GAME END\r\n"
+                            + "disconnect\r\n"
+                            + "end\r\n").getBytes());
+                    opponentOut.flush();
+                    return false;
                 }
                 String out = "RECEIVED SHOT\r\n"
                              + playerIn.nextLine() + "\r\n"
                              + playerIn.nextLine() + "\r\n"
                              + "end\r\n";
+                playerIn.nextLine();
                 opponentOut.write(out.getBytes());
                 in = opponentIn.nextLine();
+                System.out.println(in);
                 switch (in)
                 {
                     case "HIT":
@@ -125,6 +140,7 @@ public class GameManager extends Thread
                 }
                 out += "\r\n"
                 + "end\r\n";
+                System.out.println(out);
                 playerOut.write(out.getBytes());
                 if (sunk[player] == 5)
                 {
@@ -132,7 +148,7 @@ public class GameManager extends Thread
                             + "win\r\n"
                             + "end\r\n").getBytes());
                     opponentOut.write(("GAME END\r\n"
-                            + "lose\r\n"
+                            + "loss\r\n"
                             + "end\r\n").getBytes());
                     return false;
                 }

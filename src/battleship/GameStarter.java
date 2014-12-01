@@ -5,11 +5,9 @@
  */
 package battleship;
 
+import battleship.Server.Player;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayDeque;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -18,7 +16,7 @@ import java.util.logging.Logger;
 public class GameStarter extends Thread
 {
 
-    static final ArrayDeque<Socket> players = new ArrayDeque();
+    static final ArrayDeque<Player> players = new ArrayDeque();
 
     public void run()
     {
@@ -31,6 +29,7 @@ public class GameStarter extends Thread
             while (players.size() >= 2) {
                 try {
                     new GameManager(players.remove(), players.remove()).start();
+                    System.out.println("start");
                 } catch (IOException ex) {
                     System.out.println(ex);
                 }

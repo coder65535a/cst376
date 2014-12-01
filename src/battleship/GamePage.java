@@ -8,7 +8,12 @@ package battleship;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -29,10 +34,40 @@ public class GamePage extends javax.swing.JFrame
     public volatile EnemySpace target;
     public boolean gameEnd;
 
+    private static Socket findServer()
+    {
+        try {
+            String toSend = "FIND GAME SERVER";
+            //get a byte array
+            byte[] buffer = toSend.getBytes();
+
+            InetAddress addy = InetAddress.getByName("255.255.255.255");
+
+            //make a packet...
+            DatagramPacket out = new DatagramPacket(buffer, buffer.length, addy, 7777);
+
+            DatagramSocket client = new DatagramSocket();
+
+            client.send(out);
+            client.receive(out);
+            String in = new String(out.getData());
+            //id = Integer.parseInt(in.substring(18, in.length()));
+            return new Socket(out.getAddress().toString().substring(1), 4004);
+
+        } catch (UnknownHostException ex) {
+            System.out.println(ex);
+        } catch (SocketException ex) {
+            System.out.println(ex);
+        } catch (IOException ex) {
+            System.out.println(ex);
+        }
+        return null;
+    }
+
     /**
      * Creates new form GamePage
      */
-    public GamePage() throws IOException
+    public GamePage(Socket server) throws IOException
     {
         me = this;
         gameEnd = false;
@@ -74,37 +109,28 @@ public class GamePage extends javax.swing.JFrame
                 e[i][j].y = i;
             }
         }
-        a[2][3].setBackground(Color.GRAY);
-        a[2][4].setBackground(Color.GRAY);
-        a[2][5].setBackground(Color.GRAY);
-        a[2][6].setBackground(Color.GRAY);
-        a[2][7].setBackground(Color.GRAY);
-        a[4][5].setBackground(Color.GRAY);
-        a[5][5].setBackground(Color.GRAY);
-        a[6][5].setBackground(Color.GRAY);
-        a[7][5].setBackground(Color.GRAY);
-        a[7][7].setBackground(Color.GRAY);
-        a[7][8].setBackground(Color.GRAY);
-        a[7][9].setBackground(Color.GRAY);
-        a[10][9].setBackground(Color.GRAY);
-        a[10][10].setBackground(Color.GRAY);
-        for (int i = 0; i < 10; i++) {
-            Random rand = new Random();
-            int x = rand.nextInt(10) + 1;
-            int y = rand.nextInt(10) + 1;
-            Color c = a[x][y].getBackground() == Color.GRAY ? Color.RED
-                              : Color.WHITE;
-            a[x][y].setBackground(c);
-        }
-        for (int i = 0; i < 10; i++) {
-            Random rand = new Random();
-            int x = rand.nextInt(10) + 1;
-            int y = rand.nextInt(10) + 1;
-            boolean z = rand.nextBoolean();
-            Color c = z ? Color.RED : Color.WHITE;
-            e[x][y].setBackground(c);
-        }
-        Socket server = new Socket(serverIP, 4004);
+        Color ship1 = new Color(0,0,0);
+        Color ship2 = new Color(51,51,51);
+        Color ship3 = new Color(102,102,102);
+        Color ship4 = new Color(153,153,153);
+        Color ship5 = new Color(204,204,204);
+        a[2][3].setBackground(ship1);
+        a[2][4].setBackground(ship1);
+        a[2][5].setBackground(ship1);
+        a[2][6].setBackground(ship1);
+        a[2][7].setBackground(ship1);
+        a[4][5].setBackground(ship2);
+        a[5][5].setBackground(ship2);
+        a[6][5].setBackground(ship2);
+        a[7][5].setBackground(ship2);
+        a[7][7].setBackground(ship3);
+        a[7][8].setBackground(ship3);
+        a[7][9].setBackground(ship3);
+        a[1][7].setBackground(ship4);
+        a[1][8].setBackground(ship4);
+        a[1][9].setBackground(ship4);
+        a[10][9].setBackground(ship5);
+        a[10][10].setBackground(ship5);
         Scanner serverIn = new Scanner(server.getInputStream());
         OutputStream serverOut = server.getOutputStream();
 
@@ -119,7 +145,8 @@ public class GamePage extends javax.swing.JFrame
                                                              JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
                     try {
                         serverOut.write(("QUIT\r\n"
-                                + "end\r\n").getBytes());
+                                         + "end\r\n").getBytes());
+                        System.out.println("write");
                         System.exit(0);
                     } catch (IOException ex) {
                         Logger.getLogger(GamePage.class.getName()).log(Level.SEVERE, null, ex);
@@ -133,51 +160,31 @@ public class GamePage extends javax.swing.JFrame
             {
                 try {
                     me.setVisible(true);
-
-                    while (true) {
-                        while (!serverIn.hasNextLine()); //wait for input
-                        String in = serverIn.nextLine();
-
-                        if (!(in.equals("GAME END") || in.equals("START TURN") || in.equals("RECIEVED SHOT"))) {
-                            serverOut.write(("SYNC ERROR\r\n"
-                                             + "end\r\n").getBytes());
-                            continue;
-                        }
-                        if (in.equals("GAME END")) {
-                            String end = serverIn.nextLine();
-                            if (end.equals("win")) {
-                                jTextArea1.append("YOU WON!\r\n");
-                            } else if (end.equals("loss")) {
-                                jTextArea1.append("You lost...\r\n");
-                            } else {
-                                jTextArea1.append("They quit, so you won!\r\n");
-                            }
-                            gameEnd = true;
-                            while (true);
-                        } else if (in.equals("START TURN")) {
-                            jTextArea1.append("Your turn!\r\n");
-                            playerTurn = true;
-                            while (target == null);
-                            serverOut.write(("SHOOT\r\n"
-                                             + target.x + "\r\n"
-                                             + target.y + "\r\n"
-                                             + "end\r\n").getBytes());
+                    System.out.println("aaa");
+                    new Thread()
+                    {
+                        public void run()
+                        {
                             while (!serverIn.hasNextLine()); //wait for input
-                            in = serverIn.nextLine();
-                            switch (in) {
-                                case "HIT":
-                                    target.setBackground(Color.red);
-                                    jTextArea1.append("Hit!\r\n");
-                                    break;
-                                case "MISS":
-                                    target.setBackground(Color.WHITE);
-                                    jTextArea1.append("Miss...\r\n");
-                                    break;
-                                case "SINK":
-                                    target.setBackground(Color.red);
-                                    jTextArea1.append("SINK!\r\n");
-                                    break;
-                                case "GAME END":
+                            System.out.println(serverIn.nextLine());
+                            String oppName = serverIn.nextLine();
+                            System.out.println(oppName);
+                            serverIn.nextLine();
+
+                            while (true) {
+                                while (!serverIn.hasNextLine()); //wait for input
+                                String in = serverIn.nextLine();
+
+                                if (!(in.equals("GAME END") || in.equals("START TURN") || in.equals("RECEIVED SHOT"))) {
+                                    try {
+                                        serverOut.write(("SYNC ERROR\r\n"
+                                                         + "end\r\n").getBytes());
+                                        continue;
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(GamePage.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                                if (in.equals("GAME END")) {
                                     String end = serverIn.nextLine();
                                     if (end.equals("win")) {
                                         jTextArea1.append("YOU WON!\r\n");
@@ -188,45 +195,100 @@ public class GamePage extends javax.swing.JFrame
                                     }
                                     gameEnd = true;
                                     while (true);
-                                default:
+                                } else if (in.equals("START TURN")) {
+                                    serverIn.nextLine();
+                                    try {
+                                        jTextArea1.append("Your turn!\r\n");
+                                        playerTurn = true;
+                                        synchronized (me) {
+                                            while (target == null) {
+                                                try {
+                                                    me.wait();
+                                                } catch (InterruptedException ex) {
+                                                }
+                                            }
+                                        }
+                                        target.setBackground(Color.CYAN);
+                                        serverOut.write(("SHOOT\r\n"
+                                                         + target.x + "\r\n"
+                                                         + target.y + "\r\n"
+                                                         + "end\r\n").getBytes());
+                                        while (!serverIn.hasNextLine()); //wait for input
+                                        in = serverIn.nextLine();
+                                        System.out.println(in);
+                                        switch (in) {
+                                            case "HIT":
+                                                target.setBackground(Color.red);
+                                                jTextArea1.append("Hit!\r\n");
+                                                break;
+                                            case "MISS":
+                                                target.setBackground(Color.WHITE);
+                                                jTextArea1.append("Miss...\r\n");
+                                                break;
+                                            case "SINK":
+                                                target.setBackground(Color.red);
+                                                jTextArea1.append("SINK!\r\n");
+                                                break;
+                                            case "GAME END":
+                                                String end = serverIn.nextLine();
+                                                if (end.equals("win")) {
+                                                    jTextArea1.append("YOU WON!\r\n");
+                                                } else if (end.equals("loss")) {
+                                                    jTextArea1.append("You lost...\r\n");
+                                                } else {
+                                                    jTextArea1.append("They quit, so you won!\r\n");
+                                                }
+                                                gameEnd = true;
+                                                while (true);
+                                            default:
 
-                            }
-                            target = null;
-                        } else {
-                            int x = serverIn.nextInt();
-                            serverIn.nextLine();
-                            int y = serverIn.nextInt();
-                            serverIn.nextLine();
-                            PlayerSpace space = a[x][y];
-                            int type = (space.getBackground().getBlue() / 51);
-                            String out = "";
-                            if (type == 5) {
-                                out = "MISS";
-                                space.setBackground(Color.white);
-                                jTextArea1.append("They missed!\r\n");
-                            } else {
-                                space.setBackground(Color.red);
-                                hits[type]--;
-                                if (hits[type] == 0) {
-                                    out = "SINK";
-                                    jTextArea1.append("They sunk our ship!\r\n");
+                                        }
+                                        target = null;
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(GamePage.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
                                 } else {
-                                    out = "HIT";
-                                    jTextArea1.append("They hit!\r\n");
+                                    int x = serverIn.nextInt();
+                                    serverIn.nextLine();
+                                    int y = serverIn.nextInt();
+                                    serverIn.nextLine();
+                                    PlayerSpace space = a[y][x];
+                                    int type = (space.getBackground().getBlue() / 51);
+                                    String out = "";
+                                    if (type == 5) {
+                                        out = "MISS";
+                                        space.setBackground(Color.white);
+                                        jTextArea1.append("They missed!\r\n");
+                                    } else {
+                                        space.setBackground(Color.red);
+                                        hits[type]--;
+                                        if (hits[type] == 0) {
+                                            out = "SINK";
+                                            jTextArea1.append("They sunk our ship!\r\n");
+                                        } else {
+                                            out = "HIT";
+                                            jTextArea1.append("They hit!\r\n");
+                                        }
+                                    }
+                                    out += "\r\n"
+                                           + "end\r\n";
+                                    try {
+                                        serverOut.write(out.getBytes());
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(GamePage.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
                                 }
+                                while (!serverIn.nextLine().equals("end"));
+
                             }
-                            out += "\r\n"
-                                   + "end\r\n";
-                            serverOut.write(out.getBytes());
                         }
-                        while (!serverIn.nextLine().equals("end"));
-
-                    }
-
-                } catch (IOException ex) {
+                    }.
+                            start();
+                } catch (Exception ex) {
                 }
             }
-        });
+        }
+        );
     }
 
     /**
@@ -332,7 +394,7 @@ public class GamePage extends javax.swing.JFrame
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[])
+    public static void main(String args[]) throws IOException
     {
         /*
          * Set the Nimbus look and feel
@@ -349,20 +411,24 @@ public class GamePage extends javax.swing.JFrame
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
+
                 }
             }
         } catch (ClassNotFoundException | InstantiationException |
-                IllegalAccessException |
-                javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(GamePage.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                 IllegalAccessException |
+                 javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(GamePage.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
         /*
          * Create and display the form
          */
-        
+        Socket server = findServer();
         //</editor-fold>
-
+        server.getOutputStream().write(("FIND GAME\r\n"
+                                        + "player" + "\r\n").getBytes());
+        new GamePage(server);
         /*
          * Create and display the form
          */
@@ -375,8 +441,12 @@ public class GamePage extends javax.swing.JFrame
 
     private void player2GameFieldClick(EnemySpace space)
     {
-        if (playerTurn) {
-            target = space;
+        synchronized (me) {
+            System.out.println("click");
+            if (playerTurn) {
+                target = space;
+                me.notifyAll();
+            }
         }
     }
 

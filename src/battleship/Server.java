@@ -24,6 +24,7 @@ public class Server extends Thread
     public static void main(String[] args)
     {
         new GameStarter().start();
+        new ServerIdentifier().start();
         try {
             //open server socket to listen here on 4004
             ServerSocket server = new ServerSocket(4004);
@@ -59,12 +60,23 @@ public class Server extends Thread
         try {
             Scanner reader = new Scanner(client.getInputStream());
             if (reader.nextLine().equals("FIND GAME")) {
-                GameStarter.players.add(client);
+                GameStarter.players.add(new Player(client, reader.nextLine()));
             }
 
         } catch (Exception e) {
             System.out.println(e);
         }
     }
+    
+    public class Player
+    {
+        public Socket client;
 
+        public Player(Socket client, String name)
+        {
+            this.client = client;
+            this.name = name;
+        }
+        public String name;
+    }
 }
