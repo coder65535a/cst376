@@ -3,25 +3,27 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package battleship;
 
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Random;
+import java.util.Scanner;
 
 /**
  *
  * @author mruth, bkeyser
  */
-public class Server extends Thread {
+public class Server extends Thread
+{
 
-    private static final String[] outputs = {"HIT","MISS"};
+    private static volatile int port = 5000;
+
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
+        new GameStarter().start();
         try {
             //open server socket to listen here on 4004
             ServerSocket server = new ServerSocket(4004);
@@ -32,44 +34,37 @@ public class Server extends Thread {
                 Socket client = server.accept();
                 //here create a new thread...
                 new Server(client).start();
-                
             }
-            
-            
+
         } catch (Exception e) {
         }
     }
-    
+
     private final Socket client;
-    
-    public Server(Socket client) {
+
+    public Server(Socket client)
+    {
         this.client = client;
     }
-    
+
     public String generateOutput() //change this method to change output.
     {
         //pick a random string from outputs
-        return outputs[new Random().nextInt(outputs.length)];
+        return "";
     }
-    
-    public void run() {
-        
-       try {
-            
-            //outwriter
-            OutputStreamWriter out = new OutputStreamWriter(client.getOutputStream());
-            String s = generateOutput();
-            out.write(s);
-            out.flush();
-            
-            client.close();
-        
-            
-        
+
+    public void run()
+    {
+
+        try {
+            Scanner reader = new Scanner(client.getInputStream());
+            if (reader.nextLine().equals("FIND GAME")) {
+                GameStarter.players.add(client);
+            }
+
         } catch (Exception e) {
             System.out.println(e);
         }
     }
-    
-    
+
 }
