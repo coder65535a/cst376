@@ -84,7 +84,7 @@ public class GameManager extends Thread
                 while (!playerIn.hasNextLine()); //wait for input
 
                 String in = playerIn.nextLine();
-                if (!in.equals("SHOOT") && in.equals("QUIT")) {
+                if (!in.equals("SHOOT") && !in.equals("QUIT")) {
                     playerOut.write(("SYNC ERROR\r\n"
                                      + "end\r\n").getBytes());
                 }
@@ -110,16 +110,17 @@ public class GameManager extends Thread
                         in = opponentIn.nextLine();
                         while (!in.equals("end"))
                         {
-                            out += in;
+                            out += "\r\n" + in;
                             in = opponentIn.nextLine();
                         }
                         break;
                     case "QUIT":
                         out = "GAME END\r\n"
-                        + "disconnect";
+                        + "disconnect\r\n"
+                        + "end\r\n";
                         break;
                     default:
-                        opponentOut.write("UNRECOGNISED COMMAND".getBytes());
+                        opponentOut.write(("UNRECOGNISED COMMAND\r\n").getBytes());
                         continue;
                 }
                 out += "\r\n"
@@ -133,8 +134,9 @@ public class GameManager extends Thread
                     opponentOut.write(("GAME END\r\n"
                             + "lose\r\n"
                             + "end\r\n").getBytes());
-                    
+                    return false;
                 }
+                cont = false;
             }
         } catch (IOException ex) {
             Logger.getLogger(GameManager.class.getName()).log(Level.SEVERE, null, ex);
