@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package battleship;
 
 import java.io.IOException;
@@ -16,22 +15,25 @@ import java.util.logging.Logger;
  *
  * @author coder65535
  */
-public class GameStarter extends Thread{
+public class GameStarter extends Thread
+{
+
     static final ArrayDeque<Socket> players = new ArrayDeque();
 
-    
-    public void run(){
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException ex) {
-            //Won't happen
-        }
-        while(players.size() >= 2)
-        {
+    public void run()
+    {
+        while (true) {
             try {
-                new GameManager(players.remove(), players.remove()).start();
-            } catch (IOException ex) {
-                System.out.println(ex);
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+                //Won't happen
+            }
+            while (players.size() >= 2) {
+                try {
+                    new GameManager(players.remove(), players.remove()).start();
+                } catch (IOException ex) {
+                    System.out.println(ex);
+                }
             }
         }
     }
